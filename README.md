@@ -27,3 +27,24 @@ npm start
 
 After running 'npm start' in ./client directory development server will start and open a browser on 3000 port, where there will be client application served. Server application by default is being served on 4000 port.
 
+## Running tests
+
+### Client
+
+Run following command to run test with coverage report in ./client directory
+
+```
+npm test -- --coverage
+```
+
+Coverage report will be displayed not only in terminal but also there will be generated html version of it in ./client/coverage/lcov-report/index.html
+
+### Server
+
+Run following command to run test with coverage report in ./client directory
+
+```
+npm run-script test-with-coverage
+```
+
+Coverage report will be displayed in terminal
