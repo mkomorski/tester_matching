@@ -8,7 +8,7 @@ rm -rf ../server/public
 mkdir -p ../server/public
 cp -r ./build/* ../server/public
 cd ../server
-echo -e "*** Installing server application dist to server application *** \n"
+echo -e "*** Installing server application dependencies *** \n"
 npm install
 echo -e "*** Running server app on http://localhost:4000 *** \n"
 npm start
