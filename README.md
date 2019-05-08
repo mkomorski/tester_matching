@@ -41,7 +41,7 @@ Coverage report will be displayed not only in terminal but also there will be ge
 
 ### Server
 
-Run following command to run test with coverage report in ./client directory
+Run following command to run test with coverage report in ./server directory
 
 ```
 npm run-script test-with-coverage
