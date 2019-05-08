@@ -70,7 +70,7 @@ describe('DataStore', function () {
     try {
       dataStore.getBugsByParams([])
     } catch (e) {
-      assert.strictEqual(e, 'Error: Unexpected param type')
+      assert.strictEqual(String(e), 'Error: Unexpected param type')
     }
   })
 })
