@@ -2,7 +2,7 @@
 
 This project contains two applications. Client powered by ReactJS and Server powered by NodeJS/Express.
 Server application provides REST API to fetch information about testers and their experience. Client application is single page application
-running in browser.
+running in browser. Make sure you have got NodeJS(^v8.0) and npm(^v.5.0) properly installed on your OS in order to run project.
 
 ## How to run
 
