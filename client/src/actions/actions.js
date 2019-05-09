@@ -34,15 +34,22 @@ export function processXHR (state) {
 
 export function requestLoadDict (key) {
   return async dispatch => {
-    let response = await fetch(`${API_ENDPOINT}/dicts?key=${key}`)
-    let jsonBody = await response.json()
 
-    if (response.ok) {
-      dispatch(dictLoaded(key, jsonBody))
-    } else {
-      console.error(`HTTP Request error: ${jsonBody.messageCode}`)
-      // @TODO Display message modal on http error
-    }
+      try{
+          let response = await fetch(`${API_ENDPOINT}/dicts?key=${key}`)
+          let jsonBody = await response.json()
+
+          if (response.ok) {
+            dispatch(dictLoaded(key, jsonBody))
+          } else {
+            console.error(`HTTP Request error response: ${jsonBody.messageCode}`)
+            // @TODO Display message modal on http error
+          }
+      }catch(e)
+      {
+          console.error(`HTTP Request failed`)
+          // @TODO Display message modal on http error
+      }
   }
 }
 
@@ -55,15 +62,22 @@ export function requestLoadResults () {
     let paramsStr = devices.reduce((prev, curr) => `${prev}devicesIds=${curr}&`, '')
     paramsStr = countries.reduce((prev, curr) => `${prev}countries=${curr}&`, paramsStr)
 
-    let response = await fetch(`${API_ENDPOINT}/bugs?${paramsStr}`)
-    let jsonBody = await response.json()
-    dispatch(processXHR(false))
-    if (response.ok) {
-      dispatch(resultsLoaded(jsonBody))
-    } else {
-      dispatch(resultsLoaded([]))
-      console.error(`HTTP Request error: ${jsonBody.messageCode}`)
-      // @TODO Display message modal on http error
-    }
+      try {
+          let response = await fetch(`${API_ENDPOINT}/bugs?${paramsStr}`)
+          let jsonBody = await response.json()
+          dispatch(processXHR(false))
+          if (response.ok) {
+              dispatch(resultsLoaded(jsonBody))
+          } else {
+              dispatch(resultsLoaded([]))
+              console.error(`HTTP Request error: ${jsonBody.messageCode}`)
+              // @TODO Display message modal on http error
+          }
+      }catch(e)
+      {
+          console.error(`HTTP Request failed`)
+          // @TODO Display message modal on http error
+      }
+
   }
 }

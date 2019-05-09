@@ -1,10 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import UpdateButton from '../src/components/UpdateButton'
 import ClearButton from '../src/components/ClearButton'
 import ResultsList from '../src/components/ResultsList'
 import App from '../src/App'
-import Select from '../src/components/Select'
 import { create } from 'react-test-renderer'
 import { act } from 'react-dom/test-utils'
 import { resultsLoaded } from '../src/actions/actions'
@@ -20,6 +18,14 @@ const resultsMock = [
 ]
 
 let container
+
+describe('snapshots', () => {
+  it('App snapshot', () => {
+    let app = create(<App />)
+    expect(app.toJSON()).toMatchSnapshot()
+  })
+})
+
 describe('components tests', () => {
   beforeEach(() => {
     container = document.createElement('div')
