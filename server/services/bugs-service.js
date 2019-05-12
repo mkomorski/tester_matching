@@ -4,8 +4,10 @@ class BugsService {
   async prepareOutput (filteredBugs) {
     let output = []
 
+    let testers = await dataStore.getCollectionByParams('testers', { testerId: filteredBugs.map(b => b.testerId) })
+
     for (let bug of filteredBugs) {
-      let currentTester = await dataStore.getItemByParam('testers', { field: 'testerId', value: bug.testerId })
+      let currentTester = testers.find(t => t.testerId === bug.testerId)
 
       if (!currentTester) { return }
 

@@ -6,10 +6,6 @@ const fs = require('fs')
  I chose third-party library for parsing csv files to json format which is also able to work on streams
  in case of big files. **/
 class DataStore {
-  constructor () {
-
-  }
-
   getStream (fileName) {
     return fs.createReadStream(`${dataFilesPath}/${fileName}.csv`).pipe(csvService())
   }
@@ -26,27 +22,6 @@ class DataStore {
     if (!availableCollections.includes(id)) { throw new Error('Unknown collection name') }
 
     return this.getStream(id).subscribe(mapFunction)
-  }
-
-  async getItemByParam (collectionName, param) {
-    return new Promise((res, rej) => {
-      let convertedStream = this.getStream(collectionName)
-
-      let elem
-
-      convertedStream.on('data', (data) => {
-        let item = JSON.parse(data)
-        if (item[param.field] === param.value) {
-          convertedStream.end()
-          elem = item
-          res(elem)
-        }
-      })
-
-      convertedStream.on('end', () => {
-        if (!elem) { rej('Element not found') }
-      })
-    })
   }
 
   async getCollectionByParams (collectionName, params, mapFunction) {
