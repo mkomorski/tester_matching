@@ -7,9 +7,7 @@ const fs = require('fs')
  in case of big files. **/
 class DataStore {
   constructor () {
-
-    // this.getCollectionByParams('testers', {testerId: ['1']}, item => console.log(item))
-    this.getItemByParam('testers', {field: 'testerId', value: '1'})
+    
   }
 
   getStream(fileName) {
