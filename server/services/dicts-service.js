@@ -10,21 +10,33 @@ class DictsService {
         key: '', display: ''
       }
     }
+
+    this.parseToKeyValueFormat = this.parseToKeyValueFormat.bind(this)
   }
 
-  getDict (key) {
-    let collection = dataStore.getCollection(key)
-
-    /** parsing collection to {key: .., value: ..} format based on information from config map */
-    return collection.map(item => {
+  parseToKeyValueFormat (key) {
+    return function (item) {
       let map = this.dictsMap
       let k = map[key]['key']; let v = map[key]['display']
 
-      return {
-        key: k ? item[k] : item,
-        value: v ? item[v] : item
-      }
-    })
+      item.key = k ? item[k] : item,
+      item.value = v ? item[v] : item
+
+      Object.keys(item).filter(key => !['key', 'value'].includes(key)).forEach(key => delete item[key])
+    }.bind(this)
+  }
+
+  async getDict (key) {
+    if (key === 'countries') {
+      let testers = await dataStore.getCollectionByParams('testers', {})
+      let countries = testers.reduce((prev, curr) => prev.includes(curr.country) ? prev : [...prev, curr.country], [])
+
+      return countries.map(c => ({ key: c, value: c }))
+    }
+
+    let collection = await dataStore.getCollectionByParams(key, {}, this.parseToKeyValueFormat(key))
+
+    return collection
   }
 }
 

@@ -1,75 +1,51 @@
 const csvService = require('csvtojson/v2')
 const dataFilesPath = `${__dirname}/../data`
+const fs = require('fs')
 
 /** Some kind of data layer abstraction, just for avoiding using a database
  I chose third-party library for parsing csv files to json format which is also able to work on streams
- in case of big files. Data is being loaded for once at application start **/
+ in case of big files. **/
 class DataStore {
-  constructor () {
-    this.dataLoaded = false
-    this.collections = {
-      bugs: [], testers: [], devices: []
-    }
+  getStream (fileName) {
+    return fs.createReadStream(`${dataFilesPath}/${fileName}.csv`).pipe(csvService())
   }
 
-  async loadData () {
-    let collectionKeys = Object.keys(this.collections)
-    let readFilesPromises = collectionKeys.map(key => csvService().fromFile(`${dataFilesPath}/${key}.csv`))
-    let resolved
-    try {
-      resolved = await Promise.all(readFilesPromises)
-    } catch (e) {
-      console.error('Problem during data loading')
-      resolved = []
-    }
+  /**
+   * This method can be used for passing stream directly to response object
+   * can be helpful in large collections case
+   * @param id
+   * @param mapFunction
+   */
+  getCollectionLazily (id, mapFunction) {
+    let availableCollections = ['devices', 'testers', 'bugs']
 
-    let nr = 0
-    for (let item of resolved) {
-      let key = collectionKeys[nr++]
-      this.collections[key] = item
-    }
+    if (!availableCollections.includes(id)) { throw new Error('Unknown collection name') }
 
-    /** fetching tester_device.csv, despite it's actually not necessary for fulfilling requirements **/
-    resolved = await csvService().fromFile(`${dataFilesPath}/tester_device.csv`)
-
-    for (let row of resolved) {
-      let tester = this.collections['testers'].find(item => item.testerId === row.testerId)
-      let device = this.collections['devices'].find(item => item.deviceId === row.deviceId)
-
-      if (!tester || !device) { return }
-
-      Array.isArray(tester.devices) ? tester.devices.push(device) : tester.devices = [device]
-    }
-
-    this.collections['countries'] = this.getCountriesDictContent(this.collections['testers'])
-    this.dataLoaded = true
+    return this.getStream(id).subscribe(mapFunction)
   }
 
-  /** populating countries dict based on testers collection information */
-  getCountriesDictContent (testers) {
-    return testers.reduce((prev, curr) => prev.includes(curr.country) ? prev : [...prev, curr.country], [])
-  }
+  async getCollectionByParams (collectionName, params, mapFunction) {
+    return new Promise((res, rej) => {
+      let convertedStream = this.getStream(collectionName)
 
-  getCollection (id) {
-    if (!this.dataLoaded) { throw new Error('Data not loaded') }
+      if (mapFunction) { convertedStream.subscribe(mapFunction) }
 
-    /** returning new copy of array to make the original one immutable */
-    return [...this.collections[id]]
-  }
+      let outputCollection = []
 
-  getBugsByParams (devicesIds, countries) {
-    if (!this.dataLoaded) { throw new Error('Data not loaded') }
+      convertedStream.on('data', (data) => {
+        let item = JSON.parse(data)
+        let flag = true
 
-    if (!Array.isArray(devicesIds) || !Array.isArray(countries)) { throw new Error('Unexpected param type') }
+        for (let paramKey of Object.keys(params)) {
+          if (params[paramKey].length && !params[paramKey].includes(item[paramKey])) { flag = false }
+        }
 
-    return this.collections['bugs'].filter(bug => {
-      /** need to find tester to filter by countries */
-      let currentTester = this.collections['testers'].find(tester => tester.testerId === bug.testerId)
+        if (flag) { outputCollection.push(item) }
+      })
 
-      /** filtering data set with criteria */
-      return !(!currentTester ||
-                (devicesIds.length && !devicesIds.includes(bug.deviceId)) ||
-                (countries.length && !countries.includes(currentTester.country)))
+      convertedStream.on('end', () => {
+        res(outputCollection)
+      })
     })
   }
 }

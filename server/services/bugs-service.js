@@ -1,30 +1,40 @@
 const dataStore = require('../store/data-store')
 
 class BugsService {
-  prepareOutput (filteredBugs) {
+  async prepareOutput (filteredBugs) {
     let output = []
-    let testers = dataStore.getCollection('testers')
 
-    filteredBugs.forEach(bug => {
-      let currentTester = testers.find(tester => tester.testerId === bug.testerId)
+    let testers = await dataStore.getCollectionByParams('testers', { testerId: filteredBugs.map(b => b.testerId) })
+
+    for (let bug of filteredBugs) {
+      let currentTester = testers.find(t => t.testerId === bug.testerId)
 
       if (!currentTester) { return }
 
       let testerInOutput = output.find(t => t.testerId === currentTester.testerId)
 
       if (!testerInOutput) { output.push({ bugsReported: 1, ...currentTester }) } else { testerInOutput.bugsReported++ }
-    })
+    }
 
     return output.sort((a, b) => b.bugsReported - a.bugsReported)
   }
 
-  getBugsOverview (devicesIds, countries) {
+  async getBugsOverview (devicesIds, countries) {
     let devicesIdsArray = devicesIds ? (Array.isArray(devicesIds) ? devicesIds : [devicesIds]) : []
     let countriesArray = countries ? (Array.isArray(countries) ? countries : [countries]) : []
 
-    let filteredBugs = dataStore.getBugsByParams(devicesIdsArray, countriesArray)
+    let filteredBugs = await dataStore.getCollectionByParams('bugs', { deviceId: devicesIdsArray })
 
-    return this.prepareOutput(filteredBugs)
+    if (countriesArray.length) {
+      let testers = await dataStore.getCollectionByParams('testers', { testerId: filteredBugs.map(b => b.testerId) })
+      let testersIds = testers.filter(t => countriesArray.includes(t.country))
+        .map(t => t.testerId)
+
+      filteredBugs = filteredBugs.filter(bug => testersIds.includes(bug.testerId))
+    }
+
+    let output = await this.prepareOutput(filteredBugs)
+    return output
   }
 }
 

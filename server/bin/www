@@ -7,10 +7,6 @@
 const app = require('../app');
 const debug = require('debug')('testers:server');
 const http = require('http');
-const dataStore = require('../store/data-store')
-
-dataStore.loadData()
-
 /**
  * Get port from environment and store in Express.
  */
